@@ -32,7 +32,7 @@
         // --- CONFIGURAZIONE ---
         
         // 1. INSERISCI QUI LA TUA API KEY DI TMDB
-        const tmdbApiKey = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MjRkZWMzNWQ0MTE0ZGM1NTFlN2ZjM2Y3YzM0OTkxMCIsIm5iZiI6MTc3NDAxNDYyMi4xMDA5OTk4LCJzdWIiOiI2OWJkNTA5ZWQ5MzFmMjg4NWI2ZTU3NWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.0fgV-sQTr7DGLJ8-qUloKsxf7tOPWh7v-Dhz9c4YsMw"; 
+        const tmdbApiKey = "724dec35d4114dc551e7fc3f7c349910"; 
         
         // 2. INSERISCI QUI IL LINK DEL TUO GOOGLE SHEET PUBBLICATO COME CSV
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDonz2CNaRYpxTJJTqjY5XW4GlxBB0vaenouNdpysCaGH5KOFw1wiXxQkPM4hd7U8g_JIFwDL0C_hc/pub?output=csv"; 
@@ -61,7 +61,7 @@
         }
 
         async function loadMoviesAndGrades() {
-            if (!tmdbApiKey || tmdbApiKey === "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MjRkZWMzNWQ0MTE0ZGM1NTFlN2ZjM2Y3YzM0OTkxMCIsIm5iZiI6MTc3NDAxNDYyMi4xMDA5OTk4LCJzdWIiOiI2OWJkNTA5ZWQ5MzFmMjg4NWI2ZTU3NWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.0fgV-sQTr7DGLJ8-qUloKsxf7tOPWh7v-Dhz9c4YsMw") {
+            if (if (!tmdbApiKey || tmdbApiKey.length < 10)) {
                 document.getElementById('movie-grid').innerHTML = '<p class="text-red-500">Errore: Manca la API Key di TMDB nel codice!</p>';
                 return;
             }
