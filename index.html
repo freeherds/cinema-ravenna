@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinema Ravenna 🍿</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+</head>
+<body class="bg-gray-950 text-white font-sans">
+
+    <nav class="p-6 border-b border-gray-800 bg-gray-900 shadow-lg">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-3xl font-extrabold text-red-500 tracking-tighter">Cinema <span class="text-white">Ravenna</span></h1>
+            <div class="flex space-x-6 text-gray-400">
+                <a href="#classifica" class="hover:text-white transition">Classifica</a>
+                <a href="#recensioni" class="hover:text-white transition">Tutte le Recensioni</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto p-8">
+        <section id="classifica" class="mb-16">
+            <h2 class="text-4xl font-bold mb-10 text-gray-100 tracking-tight">🏆 Classifica dei Più Amati</h2>
+            <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <p class="text-gray-500">Caricamento classifica e dati TMDB...</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // --- CONFIGURAZIONE ---
+        
+        // 1. INSERISCI QUI LA TUA API KEY DI TMDB
+        const tmdbApiKey = "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MjRkZWMzNWQ0MTE0ZGM1NTFlN2ZjM2Y3YzM0OTkxMCIsIm5iZiI6MTc3NDAxNDYyMi4xMDA5OTk4LCJzdWIiOiI2OWJkNTA5ZWQ5MzFmMjg4NWI2ZTU3NWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.0fgV-sQTr7DGLJ8-qUloKsxf7tOPWh7v-Dhz9c4YsMw"; 
+        
+        // 2. INSERISCI QUI IL LINK DEL TUO GOOGLE SHEET PUBBLICATO COME CSV
+        const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDonz2CNaRYpxTJJTqjY5XW4GlxBB0vaenouNdpysCaGH5KOFw1wiXxQkPM4hd7U8g_JIFwDL0C_hc/pub?output=csv"; 
+
+        const tmdbBaseUrl = "https://api.themoviedb.org/3";
+        const tmdbImgUrl = "https://image.tmdb.org/t/p/w500";
+
+        // Funzione per cercare un film su TMDB e ottenere ID e Locandina
+        async function getTmdbData(movieTitle) {
+            try {
+                const response = await fetch(`${tmdbBaseUrl}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(movieTitle)}&language=it-IT`);
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                    const bestMatch = data.results[0];
+                    return {
+                        id: bestMatch.id,
+                        title: bestMatch.title,
+                        poster: bestMatch.poster_path ? tmdbImgUrl + bestMatch.poster_path : "https://via.placeholder.com/500x750?text=No+Poster",
+                        overview: bestMatch.overview
+                    };
+                }
+            } catch (error) {
+                console.error(`Errore TMDB per ${movieTitle}:`, error);
+            }
+            return null; // Nessun match trovato
+        }
+
+        async function loadMoviesAndGrades() {
+            if (!tmdbApiKey || tmdbApiKey === "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI3MjRkZWMzNWQ0MTE0ZGM1NTFlN2ZjM2Y3YzM0OTkxMCIsIm5iZiI6MTc3NDAxNDYyMi4xMDA5OTk4LCJzdWIiOiI2OWJkNTA5ZWQ5MzFmMjg4NWI2ZTU3NWEiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.0fgV-sQTr7DGLJ8-qUloKsxf7tOPWh7v-Dhz9c4YsMw") {
+                document.getElementById('movie-grid').innerHTML = '<p class="text-red-500">Errore: Manca la API Key di TMDB nel codice!</p>';
+                return;
+            }
+
+            Papa.parse(googleSheetCSV, {
+                download: true,
+                header: true,
+                complete: async function(results) {
+                    const data = results.data;
+                    const grid = document.getElementById('movie-grid');
+                    grid.innerHTML = '';
+
+                    // 1. Raggruppiamo le recensioni e calcoliamo le medie
+                    const moviesMap = {};
+                    data.forEach(row => {
+                        const titoloRaw = row["Titolo Film"]; // Deve coincidere con l'intestazione del foglio
+                        if (!titoloRaw) return; // Salta righe vuote
+
+                        const titolo = titoloRaw.trim();
+                        if (!moviesMap[titolo]) {
+                            moviesMap[titolo] = { 
+                                titolo: titolo, 
+                                recensioni: [], 
+                                sommaVoti: 0,
+                                tmdb: null // Dati TMDB da caricare
+                            };
+                        }
+                        const voto = parseFloat(row["Voto"]);
+                        if (!isNaN(voto)) {
+                            moviesMap[titolo].recensioni.push(row);
+                            moviesMap[titolo].sommaVoti += voto;
+                        }
+                    });
+
+                    // 2. Carichiamo i dati TMDB per ogni film (in parallelo per velocità)
+                    const movieTitles = Object.keys(moviesMap);
+                    const tmdbRequests = movieTitles.map(title => getTmdbData(title));
+                    const tmdbResults = await Promise.all(tmdbRequests);
+
+                    // Associai i risultati TMDB alla mappa
+                    movieTitles.forEach((title, index) => {
+                        moviesMap[title].tmdb = tmdbResults[index];
+                    });
+
+                    // 3. Creiamo la classifica ordinata per media voto
+                    const sortedMovies = Object.values(moviesMap)
+                        .filter(m => m.recensioni.length > 0) // Solo film con voti
+                        .sort((a, b) => (b.sommaVoti / b.recensioni.length) - (a.sommaVoti / a.recensioni.length));
+
+                    // 4. Generiamo le card HTML
+                    sortedMovies.forEach(movie => {
+                        const media = (movie.sommaVoti / movie.recensioni.length).toFixed(1);
+                        const tmdb = movie.tmdb;
+                        const posterUrl = tmdb ? tmdb.poster : "https://via.placeholder.com/500x750?text=No+Poster";
+                        const overview = tmdb ? tmdb.overview.substring(0, 150) + "..." : "Trama non disponibile.";
+
+                        const card = `
+                            <div class="bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-gray-800 transform hover:scale-105 transition-all duration-300">
+                                <img src="${posterUrl}" class="w-full h-80 object-cover" alt="${movie.titolo}">
+                                <div class="p-6">
+                                    <div class="flex justify-between items-start mb-3">
+                                        <div>
+                                            <h3 class="text-2xl font-bold tracking-tight">${movie.titolo}</h3>
+                                            <p class="text-sm text-gray-500">TMDB Match: ${tmdb ? tmdb.title : 'Nessuno'}</p>
+                                        </div>
+                                        <span class="bg-red-600 px-3 py-1.5 rounded-full text-lg font-black shadow-lg">★ ${media}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-400 mb-6 italic">"${overview}"</p>
+                                    
+                                    <div class="border-t border-gray-800 pt-5 space-y-4">
+                                        <h4 class="text-xs font-semibold text-gray-600 uppercase tracking-wider">Ultime Recensioni (${movie.recensioni.length})</h4>
+                                        ${movie.recensioni.slice(0, 3).map(r => `
+                                            <div class="text-sm bg-gray-950 p-3 rounded-lg border border-gray-800">
+                                                <div class="flex justify-between mb-1">
+                                                    <span class="text-red-400 font-bold">${r["Il tuo Nome"]}:</span>
+                                                    <span class="text-gray-600 font-mono">[${r["Voto"]}/10]</span>
+                                                </div>
+                                                <p class="text-gray-300 italic text-xs">"${r["Recensione"]}"</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        grid.innerHTML += card;
+                    });
+                }
+            }
+        });
+    }
+
+    loadMoviesAndGrades();
+</script>
+</body>
+</html>
