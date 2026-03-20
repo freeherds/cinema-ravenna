@@ -7,171 +7,139 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
-        .movie-card:hover { border-color: #ef4444; transform: translateY(-4px); }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ef4444; border-radius: 10px; }
         html { scroll-behavior: smooth; }
+        .modal-active { overflow: hidden; }
     </style>
 </head>
 <body class="bg-gray-950 text-white font-sans">
 
     <nav class="p-4 border-b border-gray-800 bg-gray-900 sticky top-0 z-50 shadow-2xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            
             <div class="flex items-center gap-4">
                 <img src="resources/cineclub-logo.jpg" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-600 object-cover shadow-lg">
-                <h1 class="text-2xl font-black text-red-600 tracking-tighter italic hidden sm:block">
-                    CINECLUB <span class="text-white">RAVENNA</span>
-                </h1>
+                <h1 class="text-2xl font-black text-red-600 tracking-tighter italic hidden sm:block">CINECLUB <span class="text-white">RAVENNA</span></h1>
             </div>
-
-            <div class="hidden md:flex items-center gap-8">
-                <a href="#discussioni" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-red-500 transition">Recensioni</a>
-                <a href="#archivio" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-red-500 transition">Archivio</a>
-            </div>
-
-            <div>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform" 
-                   target="_blank" 
-                   class="bg-red-600 text-white px-5 py-2 rounded-full font-bold text-[10px] hover:bg-red-700 transition uppercase tracking-widest shadow-lg shadow-red-900/40">
-                    Vota un Film
-                </a>
+            <div class="flex items-center gap-6">
+                <a href="#classifica" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition">Classifica</a>
+                <a href="#archivio" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition hidden md:block">Archivio</a>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform" target="_blank" class="bg-red-600 px-4 py-2 rounded-full font-bold text-[10px] uppercase transition hover:scale-105 shadow-lg shadow-red-900/40">Vota</a>
             </div>
         </div>
     </nav>
 
-    <header class="max-w-7xl mx-auto px-6 pt-12 pb-6 text-center md:text-left">
-        <h2 class="text-4xl md:text-6xl font-black uppercase tracking-tighter mb-4">
-            Il Cinema visto <br><span class="text-red-600">dai soci.</span>
-        </h2>
-        <p class="text-gray-400 max-w-2xl text-lg italic">
-            Benvenuti nello spazio del CineClub Ravenna. Qui raccogliamo voti, stroncature e colpi di fulmine dei nostri incontri cinematografici.
-        </p>
-    </header>
+    <div id="movie-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4 bg-black/90 backdrop-blur-sm">
+        <div class="bg-gray-900 w-full max-w-4xl max-h-[90vh] rounded-3xl overflow-hidden border border-gray-800 flex flex-col md:flex-row shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 z-50 bg-black/50 w-10 h-10 rounded-full flex items-center justify-center border border-white/20 hover:bg-red-600 transition">✕</button>
+            
+            <div id="modal-poster" class="md:w-1/2 h-64 md:h-auto bg-cover bg-center"></div>
+            
+            <div class="md:w-1/2 p-8 overflow-y-auto custom-scrollbar flex flex-col">
+                <h2 id="modal-title" class="text-3xl font-black uppercase mb-2"></h2>
+                <div id="modal-rating" class="text-red-500 font-bold mb-4"></div>
+                <p id="modal-desc" class="text-gray-400 text-sm italic mb-8 leading-relaxed"></p>
+                
+                <div class="border-t border-gray-800 pt-6">
+                    <h4 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Recensioni dei Soci</h4>
+                    <div id="modal-reviews" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="max-w-7xl mx-auto p-6">
-        
-        <section id="discussioni" class="mb-20">
-            <div class="flex items-center justify-between mb-10 border-b border-gray-900 pb-4">
-                <h2 class="text-2xl font-bold flex items-center gap-3">
-                    <span class="text-3xl text-red-600">🎬</span> Ultime Discussioni
-                </h2>
-            </div>
-            
-            <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                <p class="text-gray-500 animate-pulse text-center w-full col-span-full italic">Caricamento della pellicola...</p>
-            </div>
-        </section>
-
-        <section id="archivio" class="mb-20">
-            <h2 class="text-xs font-bold mb-6 text-gray-600 uppercase tracking-[0.3em]">Tutti i film passati dal Club</h2>
-            <div id="movie-archive" class="flex flex-wrap gap-2">
+        <section id="classifica" class="py-10">
+            <h2 class="text-3xl font-bold mb-10 flex items-center gap-3">🏆 Classifica Film</h2>
+            <div id="movie-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 </div>
         </section>
 
+        <section id="archivio" class="py-20 border-t border-gray-900">
+            <h2 class="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] mb-6 text-center">Tutti i titoli visti</h2>
+            <div id="movie-archive" class="flex flex-wrap justify-center gap-2 opacity-50"></div>
+        </section>
     </main>
-
-    <footer class="p-10 border-t border-gray-900 text-center text-gray-600 text-xs tracking-widest uppercase">
-        CineClub Ravenna © 2024 - Passione per il grande schermo
-    </footer>
 
     <script>
         const tmdbApiKey = "724dec35d4114dc551e7fc3f7c349910"; 
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDonz2CNaRYpxTJJTqjY5XW4GlxBB0vaenouNdpysCaGH5KOFw1wiXxQkPM4hd7U8g_JIFwDL0C_hc/pub?output=csv"; 
-        const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform";
-
-        const tmdbBaseUrl = "https://api.themoviedb.org/3";
         const tmdbImgUrl = "https://image.tmdb.org/t/p/w500";
+        let moviesData = {};
 
         async function getTmdb(title) {
-            try {
-                const res = await fetch(`${tmdbBaseUrl}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(title)}&language=it-IT`);
-                const d = await res.json();
-                return d.results?.[0] || null;
-            } catch (e) { return null; }
+            const res = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(title)}&language=it-IT`);
+            const d = await res.json();
+            return d.results?.[0] || null;
         }
 
-        function init() {
-            Papa.parse(googleSheetCSV, {
-                download: true, header: true, skipEmptyLines: true,
-                complete: async function(results) {
-                    const data = results.data;
-                    const grid = document.getElementById('movie-grid');
-                    const archive = document.getElementById('movie-archive');
-                    const moviesMap = {};
+        function openModal(title) {
+            const m = moviesData[title];
+            document.getElementById('modal-title').innerText = m.title;
+            document.getElementById('modal-desc').innerText = m.tmdb?.overview || "Descrizione non disponibile.";
+            document.getElementById('modal-poster').style.backgroundImage = `url(${tmdbImgUrl + m.tmdb?.poster_path})`;
+            document.getElementById('modal-rating').innerText = `★ ${(m.total / m.reviews.length).toFixed(1)} / 10`;
+            
+            const revContainer = document.getElementById('modal-reviews');
+            revContainer.innerHTML = m.reviews.map(r => `
+                <div class="bg-gray-800/40 p-4 rounded-xl border border-gray-700/50">
+                    <div class="flex justify-between text-[10px] mb-1">
+                        <span class="font-bold text-red-500 uppercase">${r.user}</span>
+                        <span class="text-gray-500 italic">${r.vote}/10</span>
+                    </div>
+                    <p class="text-sm text-gray-300">"${r.msg}"</p>
+                </div>
+            `).join('');
 
-                    data.forEach(row => {
-                        const titleKey = Object.keys(row).find(k => k.toLowerCase().includes("titolo"));
-                        const voteKey = Object.keys(row).find(k => k.toLowerCase().includes("voto"));
-                        const nameKey = Object.keys(row).find(k => k.toLowerCase().includes("nome"));
-                        const reviewKey = Object.keys(row).find(k => k.toLowerCase().includes("recensione"));
+            document.getElementById('movie-modal').classList.remove('hidden');
+            document.body.classList.add('modal-active');
+        }
 
-                        const title = row[titleKey]?.trim();
-                        if (!title) return;
+        function closeModal() {
+            document.getElementById('movie-modal').classList.add('hidden');
+            document.body.classList.remove('modal-active');
+        }
 
-                        if (!moviesMap[title]) moviesMap[title] = { title, reviews: [], total: 0 };
-                        const v = parseFloat(row[voteKey]);
-                        if (!isNaN(v)) {
-                            moviesMap[title].reviews.push({
-                                user: row[nameKey] || "Anonimo",
-                                msg: row[reviewKey] || "Nessun commento scritto.",
-                                vote: v
-                            });
-                            moviesMap[title].total += v;
-                        }
-                    });
-
-                    grid.innerHTML = '';
-                    archive.innerHTML = '';
-                    
-                    const sorted = Object.values(moviesMap).sort((a,b) => (b.total/b.reviews.length) - (a.total/a.reviews.length));
-                    const alphabetical = Object.values(moviesMap).sort((a,b) => a.title.localeCompare(b.title));
-
-                    // Riempimento Archivio Rapido
-                    alphabetical.forEach(m => {
-                        archive.innerHTML += `<span class="px-3 py-1 bg-gray-900/50 border border-gray-800 rounded text-[10px] text-gray-500 hover:text-white transition cursor-default">${m.title}</span>`;
-                    });
-
-                    // Riempimento Griglia Film
-                    for (let m of sorted) {
-                        const tmdb = await getTmdb(m.title);
-                        const media = (m.total / m.reviews.length).toFixed(1);
-                        
-                        grid.innerHTML += `
-                            <div class="movie-card bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 flex flex-col h-[580px] shadow-2xl transition duration-300">
-                                <div class="h-60 relative overflow-hidden">
-                                    <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
-                                    <div class="absolute bottom-4 left-6 right-6">
-                                        <h3 class="text-xl font-black uppercase tracking-tighter leading-tight">${m.title}</h3>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <span class="text-red-600 font-black">★ ${media}</span>
-                                            <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">${m.reviews.length} RECENSIONI</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="p-6 flex-grow overflow-y-auto custom-scrollbar space-y-4">
-                                    ${m.reviews.slice().reverse().map(r => `
-                                        <div class="bg-black/20 p-4 rounded-2xl border border-gray-800/30">
-                                            <div class="flex justify-between items-center mb-1">
-                                                <span class="text-[10px] font-bold text-red-500 uppercase">${r.user}</span>
-                                                <span class="text-[10px] text-gray-600 font-mono">${r.vote}/10</span>
-                                            </div>
-                                            <p class="text-sm text-gray-300 italic leading-relaxed">"${r.msg}"</p>
-                                        </div>
-                                    `).join('')}
-                                </div>
-
-                                <a href="${googleFormUrl}" target="_blank" class="block w-full text-center py-4 bg-gray-800 hover:bg-red-600 text-[10px] font-bold uppercase tracking-[0.2em] transition">
-                                    Commenta film
-                                </a>
-                            </div>`;
+        Papa.parse(googleSheetCSV, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: async function(results) {
+                const grid = document.getElementById('movie-grid');
+                const archive = document.getElementById('movie-archive');
+                
+                results.data.forEach(row => {
+                    const title = row["Titolo Film"]?.trim();
+                    if (!title) return;
+                    if (!moviesData[title]) moviesData[title] = { title, reviews: [], total: 0 };
+                    const v = parseFloat(row["Voto"]);
+                    if (!isNaN(v)) {
+                        moviesData[title].reviews.push({ user: row["Il tuo Nome"], msg: row["Recensione"], vote: v });
+                        moviesData[title].total += v;
                     }
+                });
+
+                const sorted = Object.values(moviesData).sort((a,b) => (b.total/b.reviews.length) - (a.total/a.reviews.length));
+                grid.innerHTML = '';
+
+                for (let m of sorted) {
+                    m.tmdb = await getTmdb(m.title);
+                    const media = (m.total / m.reviews.length).toFixed(1);
+                    
+                    grid.innerHTML += `
+                        <div onclick="openModal('${m.title.replace(/'/g, "\\'")}')" class="group cursor-pointer">
+                            <div class="relative aspect-[2/3] rounded-2xl overflow-hidden border border-gray-800 transition duration-300 group-hover:border-red-500 group-hover:-translate-y-2 shadow-xl">
+                                <img src="${m.tmdb ? tmdbImgUrl + m.tmdb.poster_path : ''}" class="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80"></div>
+                                <div class="absolute bottom-3 left-4 right-4">
+                                    <h3 class="text-sm font-bold uppercase truncate">${m.title}</h3>
+                                    <span class="text-red-500 text-xs font-black">★ ${media}</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    
+                    archive.innerHTML += `<span class="px-2 py-1 bg-gray-900 border border-gray-800 rounded text-[10px] text-gray-600">${m.title}</span>`;
                 }
-            });
-        }
-        init();
+            }
+        });
     </script>
 </body>
 </html>
