@@ -12,13 +12,13 @@
     <nav class="p-4 border-b border-gray-800 bg-gray-900 sticky top-0 z-50 shadow-2xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-500 object-cover">
-                <h1 class="text-2xl font-black text-red-500 tracking-tighter hidden sm:block">CINECLUB <span class="text-white">RAVENNA</span></h1>
+                <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-500 object-cover shadow-[0_0_15px_rgba(239,68,68,0.5)]">
+                <h1 class="text-2xl font-black text-red-500 tracking-tighter hidden sm:block italic">CINECLUB <span class="text-white">RAVENNA</span></h1>
             </div>
             <div class="flex space-x-6 text-xs font-bold uppercase tracking-widest text-gray-400">
                 <a href="#classifica" class="hover:text-white transition">Classifica</a>
                 <a href="#archivio" class="hover:text-white transition">Archivio</a>
-                <a href="#recensioni-lista" class="hover:text-white transition">Recensioni</a>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLScyVInT65rW_OaZ5_5vS89Yj2yL-0D_fV8N6eP6x8X6eP6x8X/viewform" target="_blank" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Vota ora</a>
             </div>
         </div>
     </nav>
@@ -27,28 +27,18 @@
         
         <section id="classifica" class="mb-20">
             <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
-                <span class="text-4xl">🏆</span> I Più Amati
+                <span class="text-4xl text-yellow-500">🏆</span> I Più Amati dai Soci
             </h2>
-            <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <p class="text-gray-500 animate-pulse">Caricamento classifica...</p>
+            <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <p class="text-gray-500 animate-pulse text-center w-full">Caricamento classifiche in corso...</p>
             </div>
         </section>
 
         <section id="archivio" class="mb-20">
             <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
-                <span class="text-4xl">🎞️</span> Archivio Film
+                <span class="text-4xl text-red-500">🎞️</span> Archivio Completo
             </h2>
-            <div id="movie-archive" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                </div>
-        </section>
-
-        <hr class="border-gray-800 mb-20">
-
-        <section id="recensioni-lista" class="pb-20">
-            <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
-                <span class="text-4xl">💬</span> Ultime Opinioni
-            </h2>
-            <div id="full-reviews-list" class="space-y-4 max-w-4xl mx-auto">
+            <div id="movie-archive" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 </div>
         </section>
 
@@ -57,6 +47,8 @@
     <script>
         const tmdbApiKey = "724dec35d4114dc551e7fc3f7c349910"; 
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDonz2CNaRYpxTJJTqjY5XW4GlxBB0vaenouNdpysCaGH5KOFw1wiXxQkPM4hd7U8g_JIFwDL0C_hc/pub?output=csv"; 
+        // Link del tuo Google Form per le recensioni
+        const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLScyVInT65rW_OaZ5_5vS89Yj2yL-0D_fV8N6eP6x8X6eP6x8X/viewform";
 
         const tmdbBaseUrl = "https://api.themoviedb.org/3";
         const tmdbImgUrl = "https://image.tmdb.org/t/p/w500";
@@ -69,15 +61,14 @@
                     const best = data.results[0];
                     return {
                         poster: best.poster_path ? tmdbImgUrl + best.poster_path : "https://via.placeholder.com/500x750?text=No+Poster",
-                        overview: best.overview,
-                        title: best.title
+                        overview: best.overview
                     };
                 }
             } catch (e) { console.error(e); }
             return null;
         }
 
-        async function loadAllData() {
+        async function loadSite() {
             Papa.parse(googleSheetCSV, {
                 download: true,
                 header: true,
@@ -86,10 +77,8 @@
                     const data = results.data;
                     const grid = document.getElementById('movie-grid');
                     const archive = document.getElementById('movie-archive');
-                    const list = document.getElementById('full-reviews-list');
                     
                     const moviesMap = {};
-                    const allReviews = [];
 
                     data.forEach(row => {
                         const titleKey = Object.keys(row).find(k => k.toLowerCase().includes("titolo"));
@@ -100,81 +89,74 @@
                         const title = row[titleKey]?.trim();
                         if (!title) return;
 
-                        const vote = parseFloat(row[voteKey]);
-                        const reviewObj = {
-                            movie: title,
-                            author: row[nameKey] || "Anonimo",
-                            text: row[reviewKey] || "",
-                            vote: vote
-                        };
-
-                        allReviews.push(reviewObj);
-
                         if (!moviesMap[title]) {
                             moviesMap[title] = { title, reviews: [], totalVote: 0 };
                         }
+                        const vote = parseFloat(row[voteKey]);
                         if (!isNaN(vote)) {
-                            moviesMap[title].reviews.push(reviewObj);
+                            moviesMap[title].reviews.push({
+                                author: row[nameKey] || "Anonimo",
+                                text: row[reviewKey] || "Nessun commento scritto.",
+                                vote: vote
+                            });
                             moviesMap[title].totalVote += vote;
                         }
                     });
 
-                    const movieTitles = Object.keys(moviesMap);
                     const sortedMovies = Object.values(moviesMap).sort((a,b) => (b.totalVote/b.reviews.length) - (a.totalVote/a.reviews.length));
-                    const alphabeticalMovies = Object.values(moviesMap).sort((a,b) => a.title.localeCompare(b.title));
+                    const alphabetical = Object.values(moviesMap).sort((a,b) => a.title.localeCompare(b.title));
 
                     grid.innerHTML = '';
                     archive.innerHTML = '';
 
+                    // Rendering della CLASSIFICA con commenti aggregati
                     for (let m of sortedMovies) {
                         const tmdb = await getTmdbData(m.title);
                         const media = (m.totalVote / m.reviews.length).toFixed(1);
                         
-                        // Card Classifica (Primi 6)
-                        if (sortedMovies.indexOf(m) < 6) {
-                            grid.innerHTML += `
-                                <div class="bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-red-500 transition shadow-lg">
-                                    <img src="${tmdb?.poster}" class="w-full h-64 object-cover">
-                                    <div class="p-5">
-                                        <div class="flex justify-between items-center mb-2">
-                                            <h3 class="font-bold text-xl">${m.title}</h3>
-                                            <span class="text-red-500 font-black text-lg">★ ${media}</span>
-                                        </div>
-                                        <p class="text-gray-500 text-xs italic line-clamp-2 mb-4">${tmdb?.overview || ''}</p>
+                        grid.innerHTML += `
+                            <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col">
+                                <div class="relative group">
+                                    <img src="${tmdb?.poster}" class="w-full h-80 object-cover group-hover:scale-105 transition duration-500">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent"></div>
+                                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+                                        <h3 class="font-black text-2xl uppercase tracking-tighter">${m.title}</h3>
+                                        <span class="bg-red-600 px-3 py-1 rounded-lg font-black text-xl border-2 border-red-400">★ ${media}</span>
                                     </div>
-                                </div>`;
-                        }
+                                </div>
+                                <div class="p-6 flex-grow">
+                                    <p class="text-gray-400 text-xs italic mb-6 line-clamp-3">"${tmdb?.overview || 'Trama non disponibile'}"</p>
+                                    <div class="space-y-4">
+                                        <h4 class="text-[10px] font-bold text-gray-600 uppercase tracking-widest border-b border-gray-800 pb-2">Cosa ne pensano i soci</h4>
+                                        ${m.reviews.slice(0, 3).map(r => `
+                                            <div class="text-sm border-l-2 border-red-900 pl-3 py-1">
+                                                <p class="text-gray-300 italic">"${r.text}"</p>
+                                                <p class="text-red-500 font-bold text-[10px] mt-1">— ${r.author} (${r.vote}/10)</p>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                <a href="${googleFormUrl}" target="_blank" class="block w-full text-center py-3 bg-gray-800 hover:bg-red-600 text-xs font-bold uppercase tracking-widest transition">
+                                    Dì la tua su questo film
+                                </a>
+                            </div>`;
                     }
 
-                    // Riempimento Archivio Alfabetico
-                    for (let m of alphabeticalMovies) {
+                    // Rendering ARCHIVIO
+                    for (let m of alphabetical) {
                         const tmdb = await getTmdbData(m.title);
                         archive.innerHTML += `
-                            <div class="group relative rounded-lg overflow-hidden border border-gray-800 bg-gray-900">
-                                <img src="${tmdb?.poster}" class="w-full h-48 object-cover opacity-60 group-hover:opacity-100 transition">
-                                <div class="absolute bottom-0 p-2 bg-black/80 w-full text-[10px] font-bold truncate">
+                            <div class="group relative rounded-lg overflow-hidden border border-gray-900 bg-gray-900 aspect-[2/3]">
+                                <img src="${tmdb?.poster}" class="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition duration-500">
+                                <div class="absolute bottom-0 p-2 bg-black/90 w-full text-[9px] font-bold text-center truncate">
                                     ${m.title}
                                 </div>
                             </div>`;
                     }
-
-                    // Feed Recensioni
-                    list.innerHTML = '';
-                    allReviews.reverse().forEach(r => {
-                        list.innerHTML += `
-                            <div class="bg-gray-900 p-5 rounded-lg border-l-4 border-red-600 shadow-md">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h4 class="font-bold text-red-400 text-lg">${r.movie}</h4>
-                                    <span class="bg-gray-800 px-2 py-1 rounded text-sm font-mono text-gray-300">${r.vote}/10</span>
-                                </div>
-                                <p class="text-gray-200 italic mb-2 text-sm">"${r.text}"</p>
-                                <p class="text-gray-500 text-xs font-bold uppercase">— ${r.author}</p>
-                            </div>`;
-                    });
                 }
             });
         }
-        loadAllData();
+        loadSite();
     </script>
 </body>
 </html>
