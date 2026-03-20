@@ -3,28 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinema Ravenna 🍿</title>
+    <title>CineClub Ravenna 🍿</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body class="bg-gray-950 text-white font-sans">
 
-    <nav class="p-6 border-b border-gray-800 bg-gray-900 shadow-lg">
+    <nav class="p-4 border-b border-gray-800 bg-gray-900 sticky top-0 z-50 shadow-2xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-3xl font-extrabold text-red-500 tracking-tighter">Cinema <span class="text-white">Ravenna</span></h1>
-            <div class="flex space-x-6 text-gray-400">
+            <div class="flex items-center gap-4">
+                <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-500 object-cover">
+                <h1 class="text-2xl font-black text-red-500 tracking-tighter hidden sm:block">CINECLUB <span class="text-white">RAVENNA</span></h1>
+            </div>
+            <div class="flex space-x-6 text-xs font-bold uppercase tracking-widest text-gray-400">
                 <a href="#classifica" class="hover:text-white transition">Classifica</a>
+                <a href="#archivio" class="hover:text-white transition">Archivio</a>
+                <a href="#recensioni-lista" class="hover:text-white transition">Recensioni</a>
             </div>
         </div>
     </nav>
 
-    <main class="max-w-7xl mx-auto p-8">
-        <section id="classifica" class="mb-16">
-            <h2 class="text-4xl font-bold mb-10 text-gray-100 tracking-tight">🏆 Classifica dei Più Amati</h2>
-            <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                <p class="text-gray-500">Caricamento classifica e dati TMDB...</p>
+    <main class="max-w-7xl mx-auto p-6">
+        
+        <section id="classifica" class="mb-20">
+            <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
+                <span class="text-4xl">🏆</span> I Più Amati
+            </h2>
+            <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <p class="text-gray-500 animate-pulse">Caricamento classifica...</p>
             </div>
         </section>
+
+        <section id="archivio" class="mb-20">
+            <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
+                <span class="text-4xl">🎞️</span> Archivio Film
+            </h2>
+            <div id="movie-archive" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                </div>
+        </section>
+
+        <hr class="border-gray-800 mb-20">
+
+        <section id="recensioni-lista" class="pb-20">
+            <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
+                <span class="text-4xl">💬</span> Ultime Opinioni
+            </h2>
+            <div id="full-reviews-list" class="space-y-4 max-w-4xl mx-auto">
+                </div>
+        </section>
+
     </main>
 
     <script>
@@ -39,23 +66,18 @@
                 const response = await fetch(`${tmdbBaseUrl}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(movieTitle)}&language=it-IT`);
                 const data = await response.json();
                 if (data.results && data.results.length > 0) {
-                    const bestMatch = data.results[0];
+                    const best = data.results[0];
                     return {
-                        title: bestMatch.title,
-                        poster: bestMatch.poster_path ? tmdbImgUrl + bestMatch.poster_path : "https://via.placeholder.com/500x750?text=No+Poster",
-                        overview: bestMatch.overview
+                        poster: best.poster_path ? tmdbImgUrl + best.poster_path : "https://via.placeholder.com/500x750?text=No+Poster",
+                        overview: best.overview,
+                        title: best.title
                     };
                 }
             } catch (e) { console.error(e); }
             return null;
         }
 
-        async function loadMoviesAndGrades() {
-            if (!tmdbApiKey || tmdbApiKey.length < 10) {
-                document.getElementById('movie-grid').innerHTML = '<p class="text-red-500">Errore: API Key non valida.</p>';
-                return;
-            }
-
+        async function loadAllData() {
             Papa.parse(googleSheetCSV, {
                 download: true,
                 header: true,
@@ -63,77 +85,96 @@
                 complete: async function(results) {
                     const data = results.data;
                     const grid = document.getElementById('movie-grid');
+                    const archive = document.getElementById('movie-archive');
+                    const list = document.getElementById('full-reviews-list');
                     
-                    if (!data || data.length === 0) {
-                        grid.innerHTML = '<p class="text-yellow-500">Nessun dato trovato nel foglio CSV.</p>';
-                        return;
-                    }
-
                     const moviesMap = {};
-                    
-                    for (let row of data) {
-                        // Cerchiamo le colonne ignorando maiuscole/minuscole
+                    const allReviews = [];
+
+                    data.forEach(row => {
                         const titleKey = Object.keys(row).find(k => k.toLowerCase().includes("titolo"));
                         const voteKey = Object.keys(row).find(k => k.toLowerCase().includes("voto"));
                         const nameKey = Object.keys(row).find(k => k.toLowerCase().includes("nome"));
                         const reviewKey = Object.keys(row).find(k => k.toLowerCase().includes("recensione"));
 
-                        const titoloRaw = row[titleKey];
-                        if (!titoloRaw) continue;
+                        const title = row[titleKey]?.trim();
+                        if (!title) return;
 
-                        const titolo = titoloRaw.trim();
-                        if (!moviesMap[titolo]) {
-                            moviesMap[titolo] = { titolo, recensioni: [], sommaVoti: 0, tmdb: null };
+                        const vote = parseFloat(row[voteKey]);
+                        const reviewObj = {
+                            movie: title,
+                            author: row[nameKey] || "Anonimo",
+                            text: row[reviewKey] || "",
+                            vote: vote
+                        };
+
+                        allReviews.push(reviewObj);
+
+                        if (!moviesMap[title]) {
+                            moviesMap[title] = { title, reviews: [], totalVote: 0 };
                         }
+                        if (!isNaN(vote)) {
+                            moviesMap[title].reviews.push(reviewObj);
+                            moviesMap[title].totalVote += vote;
+                        }
+                    });
 
-                        const voto = parseFloat(row[voteKey]);
-                        if (!isNaN(voto)) {
-                            moviesMap[titolo].recensioni.push({
-                                nome: row[nameKey] || "Anonimo",
-                                testo: row[reviewKey] || "Nessun commento",
-                                voto: voto
-                            });
-                            moviesMap[titolo].sommaVoti += voto;
+                    const movieTitles = Object.keys(moviesMap);
+                    const sortedMovies = Object.values(moviesMap).sort((a,b) => (b.totalVote/b.reviews.length) - (a.totalVote/a.reviews.length));
+                    const alphabeticalMovies = Object.values(moviesMap).sort((a,b) => a.title.localeCompare(b.title));
+
+                    grid.innerHTML = '';
+                    archive.innerHTML = '';
+
+                    for (let m of sortedMovies) {
+                        const tmdb = await getTmdbData(m.title);
+                        const media = (m.totalVote / m.reviews.length).toFixed(1);
+                        
+                        // Card Classifica (Primi 6)
+                        if (sortedMovies.indexOf(m) < 6) {
+                            grid.innerHTML += `
+                                <div class="bg-gray-900 rounded-xl overflow-hidden border border-gray-800 hover:border-red-500 transition shadow-lg">
+                                    <img src="${tmdb?.poster}" class="w-full h-64 object-cover">
+                                    <div class="p-5">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h3 class="font-bold text-xl">${m.title}</h3>
+                                            <span class="text-red-500 font-black text-lg">★ ${media}</span>
+                                        </div>
+                                        <p class="text-gray-500 text-xs italic line-clamp-2 mb-4">${tmdb?.overview || ''}</p>
+                                    </div>
+                                </div>`;
                         }
                     }
 
-                    const movieTitles = Object.keys(moviesMap);
-                    const tmdbResults = await Promise.all(movieTitles.map(t => getTmdbData(t)));
-                    movieTitles.forEach((t, i) => moviesMap[t].tmdb = tmdbResults[i]);
-
-                    const sortedMovies = Object.values(moviesMap)
-                        .filter(m => m.recensioni.length > 0)
-                        .sort((a, b) => (b.sommaVoti/b.recensioni.length) - (a.sommaVoti/a.recensioni.length));
-
-                    grid.innerHTML = '';
-                    sortedMovies.forEach(movie => {
-                        const media = (movie.sommaVoti / movie.recensioni.length).toFixed(1);
-                        const tmdb = movie.tmdb;
-                        const poster = tmdb ? tmdb.poster : "https://via.placeholder.com/500x750?text=No+Poster";
-                        
-                        grid.innerHTML += `
-                            <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-xl">
-                                <img src="${poster}" class="w-full h-80 object-cover">
-                                <div class="p-6">
-                                    <div class="flex justify-between items-start mb-4">
-                                        <h3 class="text-xl font-bold">${movie.titolo}</h3>
-                                        <span class="bg-red-600 px-3 py-1 rounded-full font-bold">★ ${media}</span>
-                                    </div>
-                                    <div class="space-y-3">
-                                        ${movie.recensioni.map(r => `
-                                            <div class="bg-gray-950 p-3 rounded-lg border border-gray-800 text-sm">
-                                                <p class="text-red-400 font-bold">${r.nome} <span class="text-gray-500 font-normal">(${r.voto}/10)</span></p>
-                                                <p class="text-gray-400 italic">"${r.testo}"</p>
-                                            </div>
-                                        `).join('')}
-                                    </div>
+                    // Riempimento Archivio Alfabetico
+                    for (let m of alphabeticalMovies) {
+                        const tmdb = await getTmdbData(m.title);
+                        archive.innerHTML += `
+                            <div class="group relative rounded-lg overflow-hidden border border-gray-800 bg-gray-900">
+                                <img src="${tmdb?.poster}" class="w-full h-48 object-cover opacity-60 group-hover:opacity-100 transition">
+                                <div class="absolute bottom-0 p-2 bg-black/80 w-full text-[10px] font-bold truncate">
+                                    ${m.title}
                                 </div>
+                            </div>`;
+                    }
+
+                    // Feed Recensioni
+                    list.innerHTML = '';
+                    allReviews.reverse().forEach(r => {
+                        list.innerHTML += `
+                            <div class="bg-gray-900 p-5 rounded-lg border-l-4 border-red-600 shadow-md">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-bold text-red-400 text-lg">${r.movie}</h4>
+                                    <span class="bg-gray-800 px-2 py-1 rounded text-sm font-mono text-gray-300">${r.vote}/10</span>
+                                </div>
+                                <p class="text-gray-200 italic mb-2 text-sm">"${r.text}"</p>
+                                <p class="text-gray-500 text-xs font-bold uppercase">— ${r.author}</p>
                             </div>`;
                     });
                 }
             });
         }
-        loadMoviesAndGrades();
+        loadAllData();
     </script>
 </body>
 </html>
