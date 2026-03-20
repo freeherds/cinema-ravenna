@@ -6,39 +6,43 @@
     <title>CineClub Ravenna 🍿</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <style>
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 10px; }
+        .movie-card:hover { border-color: #ef4444; transform: translateY(-4px); }
+    </style>
 </head>
 <body class="bg-gray-950 text-white font-sans">
 
     <nav class="p-4 border-b border-gray-800 bg-gray-900 sticky top-0 z-50 shadow-2xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-500 object-cover shadow-[0_0_15px_rgba(239,68,68,0.5)]">
-                <h1 class="text-2xl font-black text-red-500 tracking-tighter hidden sm:block italic">CINECLUB <span class="text-white">RAVENNA</span></h1>
+                <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-600 object-cover shadow-lg">
+                <h1 class="text-2xl font-black text-red-600 tracking-tighter italic">CINECLUB <span class="text-white">RAVENNA</span></h1>
             </div>
-            <div class="flex space-x-6 text-xs font-bold uppercase tracking-widest text-gray-400">
-                <a href="#classifica" class="hover:text-white transition">Classifica</a>
-                <a href="#archivio" class="hover:text-white transition">Archivio</a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLScyVInT65rW_OaZ5_5vS89Yj2yL-0D_fV8N6eP6x8X6eP6x8X/viewform" target="_blank" class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition">Vota ora</a>
+            <div>
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform" target="_blank" class="bg-red-600 text-white px-5 py-2 rounded-full font-bold text-xs hover:bg-red-700 transition uppercase tracking-widest">
+                    Vota un Film
+                </a>
             </div>
         </div>
     </nav>
 
     <main class="max-w-7xl mx-auto p-6">
         
-        <section id="classifica" class="mb-20">
-            <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
-                <span class="text-4xl text-yellow-500">🏆</span> I Più Amati dai Soci
+        <section id="discussioni" class="mb-16">
+            <h2 class="text-3xl font-bold mb-10 text-gray-100 flex items-center gap-3">
+                <span class="text-4xl text-red-500">🎬</span> Le nostre Recensioni
             </h2>
+            
             <div id="movie-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                <p class="text-gray-500 animate-pulse text-center w-full">Caricamento classifiche in corso...</p>
+                <p class="text-gray-500 animate-pulse text-center w-full col-span-full">Caricamento proiettore in corso...</p>
             </div>
         </section>
 
-        <section id="archivio" class="mb-20">
-            <h2 class="text-3xl font-bold mb-8 text-gray-100 flex items-center gap-3">
-                <span class="text-4xl text-red-500">🎞️</span> Archivio Completo
-            </h2>
-            <div id="movie-archive" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        <section id="archivio" class="pt-10 border-t border-gray-900">
+            <h2 class="text-sm font-bold mb-6 text-gray-500 uppercase tracking-[0.2em]">Tutti i titoli in archivio</h2>
+            <div id="movie-archive" class="flex flex-wrap gap-2 opacity-60">
                 </div>
         </section>
 
@@ -47,37 +51,26 @@
     <script>
         const tmdbApiKey = "724dec35d4114dc551e7fc3f7c349910"; 
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDonz2CNaRYpxTJJTqjY5XW4GlxBB0vaenouNdpysCaGH5KOFw1wiXxQkPM4hd7U8g_JIFwDL0C_hc/pub?output=csv"; 
-        // Link del tuo Google Form per le recensioni
-        const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLScyVInT65rW_OaZ5_5vS89Yj2yL-0D_fV8N6eP6x8X6eP6x8X/viewform";
+        const googleFormUrl = "https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform";
 
         const tmdbBaseUrl = "https://api.themoviedb.org/3";
         const tmdbImgUrl = "https://image.tmdb.org/t/p/w500";
 
-        async function getTmdbData(movieTitle) {
+        async function getTmdb(title) {
             try {
-                const response = await fetch(`${tmdbBaseUrl}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(movieTitle)}&language=it-IT`);
-                const data = await response.json();
-                if (data.results && data.results.length > 0) {
-                    const best = data.results[0];
-                    return {
-                        poster: best.poster_path ? tmdbImgUrl + best.poster_path : "https://via.placeholder.com/500x750?text=No+Poster",
-                        overview: best.overview
-                    };
-                }
-            } catch (e) { console.error(e); }
-            return null;
+                const res = await fetch(`${tmdbBaseUrl}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(title)}&language=it-IT`);
+                const d = await res.json();
+                return d.results?.[0] || null;
+            } catch (e) { return null; }
         }
 
-        async function loadSite() {
+        function init() {
             Papa.parse(googleSheetCSV, {
-                download: true,
-                header: true,
-                skipEmptyLines: true,
+                download: true, header: true, skipEmptyLines: true,
                 complete: async function(results) {
                     const data = results.data;
                     const grid = document.getElementById('movie-grid');
                     const archive = document.getElementById('movie-archive');
-                    
                     const moviesMap = {};
 
                     data.forEach(row => {
@@ -89,74 +82,63 @@
                         const title = row[titleKey]?.trim();
                         if (!title) return;
 
-                        if (!moviesMap[title]) {
-                            moviesMap[title] = { title, reviews: [], totalVote: 0 };
-                        }
-                        const vote = parseFloat(row[voteKey]);
-                        if (!isNaN(vote)) {
+                        if (!moviesMap[title]) moviesMap[title] = { title, reviews: [], total: 0 };
+                        const v = parseFloat(row[voteKey]);
+                        if (!isNaN(v)) {
                             moviesMap[title].reviews.push({
-                                author: row[nameKey] || "Anonimo",
-                                text: row[reviewKey] || "Nessun commento scritto.",
-                                vote: vote
+                                user: row[nameKey] || "Anonimo",
+                                msg: row[reviewKey] || "Nessun testo inserito.",
+                                vote: v
                             });
-                            moviesMap[title].totalVote += vote;
+                            moviesMap[title].total += v;
                         }
                     });
 
-                    const sortedMovies = Object.values(moviesMap).sort((a,b) => (b.totalVote/b.reviews.length) - (a.totalVote/a.reviews.length));
-                    const alphabetical = Object.values(moviesMap).sort((a,b) => a.title.localeCompare(b.title));
-
                     grid.innerHTML = '';
                     archive.innerHTML = '';
+                    const sorted = Object.values(moviesMap).sort((a,b) => (b.total/b.reviews.length) - (a.total/a.reviews.length));
 
-                    // Rendering della CLASSIFICA con commenti aggregati
-                    for (let m of sortedMovies) {
-                        const tmdb = await getTmdbData(m.title);
-                        const media = (m.totalVote / m.reviews.length).toFixed(1);
+                    for (let m of sorted) {
+                        const tmdb = await getTmdb(m.title);
+                        const media = (m.total / m.reviews.length).toFixed(1);
                         
-                        grid.innerHTML += `
-                            <div class="bg-gray-900 rounded-2xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col">
-                                <div class="relative group">
-                                    <img src="${tmdb?.poster}" class="w-full h-80 object-cover group-hover:scale-105 transition duration-500">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 to-transparent"></div>
-                                    <div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
-                                        <h3 class="font-black text-2xl uppercase tracking-tighter">${m.title}</h3>
-                                        <span class="bg-red-600 px-3 py-1 rounded-lg font-black text-xl border-2 border-red-400">★ ${media}</span>
-                                    </div>
-                                </div>
-                                <div class="p-6 flex-grow">
-                                    <p class="text-gray-400 text-xs italic mb-6 line-clamp-3">"${tmdb?.overview || 'Trama non disponibile'}"</p>
-                                    <div class="space-y-4">
-                                        <h4 class="text-[10px] font-bold text-gray-600 uppercase tracking-widest border-b border-gray-800 pb-2">Cosa ne pensano i soci</h4>
-                                        ${m.reviews.slice(0, 3).map(r => `
-                                            <div class="text-sm border-l-2 border-red-900 pl-3 py-1">
-                                                <p class="text-gray-300 italic">"${r.text}"</p>
-                                                <p class="text-red-500 font-bold text-[10px] mt-1">— ${r.author} (${r.vote}/10)</p>
-                                            </div>
-                                        `).join('')}
-                                    </div>
-                                </div>
-                                <a href="${googleFormUrl}" target="_blank" class="block w-full text-center py-3 bg-gray-800 hover:bg-red-600 text-xs font-bold uppercase tracking-widest transition">
-                                    Dì la tua su questo film
-                                </a>
-                            </div>`;
-                    }
+                        archive.innerHTML += `<span class="px-2 py-1 bg-gray-900 rounded text-[10px] text-gray-400">${m.title}</span>`;
 
-                    // Rendering ARCHIVIO
-                    for (let m of alphabetical) {
-                        const tmdb = await getTmdbData(m.title);
-                        archive.innerHTML += `
-                            <div class="group relative rounded-lg overflow-hidden border border-gray-900 bg-gray-900 aspect-[2/3]">
-                                <img src="${tmdb?.poster}" class="w-full h-full object-cover opacity-50 group-hover:opacity-100 transition duration-500">
-                                <div class="absolute bottom-0 p-2 bg-black/90 w-full text-[9px] font-bold text-center truncate">
-                                    ${m.title}
+                        grid.innerHTML += `
+                            <div class="movie-card bg-gray-900 rounded-3xl overflow-hidden border border-gray-800 flex flex-col h-[550px] shadow-2xl transition duration-300">
+                                <div class="h-56 relative overflow-hidden">
+                                    <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=No+Poster'}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/20 to-transparent"></div>
+                                    <div class="absolute bottom-4 left-6 right-6">
+                                        <h3 class="text-xl font-black uppercase tracking-tighter leading-tight">${m.title}</h3>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="text-red-500 font-black">★ ${media}</span>
+                                            <span class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">${m.reviews.length} SOCI</span>
+                                        </div>
+                                    </div>
                                 </div>
+                                
+                                <div class="p-6 flex-grow overflow-y-auto custom-scrollbar space-y-4">
+                                    ${m.reviews.reverse().map(r => `
+                                        <div class="bg-black/30 p-4 rounded-2xl border border-gray-800/40">
+                                            <div class="flex justify-between items-center mb-2">
+                                                <span class="text-[10px] font-bold text-red-500 uppercase">${r.user}</span>
+                                                <span class="text-[10px] text-gray-500">${r.vote}/10</span>
+                                            </div>
+                                            <p class="text-sm text-gray-300 italic">"${r.msg}"</p>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <a href="${googleFormUrl}" target="_blank" class="block w-full text-center py-4 bg-gray-800 hover:bg-red-600 text-[10px] font-bold uppercase tracking-[0.2em] transition">
+                                    Commenta questo film
+                                </a>
                             </div>`;
                     }
                 }
             });
         }
-        loadSite();
+        init();
     </script>
 </body>
 </html>
