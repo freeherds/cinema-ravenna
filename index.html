@@ -115,7 +115,7 @@
                     const cleanRow = {};
                     Object.keys(row).forEach(k => cleanRow[k.trim()] = row[k]);
 
-                    const title = cleanRow["Titolo Film"]?.trim();
+                    const title = cleanRow["Titolo Film"]?.trim().toUpperCase();
                     if (!title) return;
 
                     if (!moviesData[title]) moviesData[title] = { title, reviews: [], total: 0 };
