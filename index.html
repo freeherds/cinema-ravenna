@@ -17,15 +17,72 @@
 
     <nav class="p-4 border-b border-gray-800 bg-gray-900 sticky top-0 z-50 shadow-2xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
+            
+            <!-- Logo -->
             <div class="flex items-center gap-4">
                 <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-600 object-cover shadow-lg" onerror="this.src='https://via.placeholder.com/100?text=CineClub'">
-                <h1 class="text-2xl font-black text-red-600 tracking-tighter italic hidden sm:block uppercase">Cineclub <span class="text-white">Ravenna</span></h1>
+                <h1 class="text-2xl font-black text-red-600 tracking-tighter italic hidden sm:block uppercase">
+                    Cineclub <span class="text-white">Ravenna</span>
+                </h1>
             </div>
+
+            <!-- Menu -->
             <div class="flex items-center gap-6">
-                <a href="#classifica" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition">Classifica</a>
-                <a href="#archivio" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition hidden md:block">Archivio</a>
-                <a href="https://chat.whatsapp.com/Gku8AxnKOiB2zfXQBWB6Q6?mode=gi_t" target="_blank" class="bg-green-600 px-4 py-2 rounded-full font-bold text-[10px] uppercase transition hover:scale-105 shadow-lg shadow-green-900/40">Entra nel Gruppo WA</a>
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform" target="_blank" class="bg-red-600 px-4 py-2 rounded-full font-bold text-[10px] uppercase transition hover:scale-105 shadow-lg shadow-red-900/40">Vota</a>
+                
+                <a href="#classifica" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition">
+                    Classifica
+                </a>
+
+                <a href="#archivio" class="text-xs font-bold uppercase tracking-widest text-gray-400 hover:text-white transition hidden md:block">
+                    Archivio
+                </a>
+
+                <!-- WA + QR -->
+                <div class="flex items-center gap-2 relative">
+                    
+                    <a 
+                        href="https://chat.whatsapp.com/Gku8AxnKOiB2zfXQBWB6Q6?mode=gi_t" 
+                        target="_blank" 
+                        class="bg-green-600 px-4 py-2 rounded-full font-bold text-[10px] uppercase transition hover:scale-105 shadow-lg shadow-green-900/40"
+                    >
+                        Entra nel Gruppo WA
+                    </a>
+
+                    <div class="relative group">
+                        <button 
+                            onclick="toggleQR()" 
+                            class="bg-white/10 backdrop-blur px-2 py-2 rounded-full hover:scale-110 transition"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-width="2" d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-6v-2h4z" />
+                            </svg>
+                        </button>
+
+                        <!-- QR -->
+                        <div 
+                            id="qrBox"
+                            class="absolute right-0 mt-2 opacity-0 scale-95 pointer-events-none 
+                                group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto
+                                transition duration-200 bg-white p-2 rounded-xl shadow-xl"
+                        >
+                            <img 
+                                src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=https://chat.whatsapp.com/Gku8AxnKOiB2zfXQBWB6Q6" 
+                                class="w-32 h-32"
+                            >
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Vota -->
+                <a 
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSc1hATPEqyWaciGKHPg8v7eKPv9UPy_ZhiwxcXs5rC1Ym5pSQ/viewform" 
+                    target="_blank" 
+                    class="bg-red-600 px-4 py-2 rounded-full font-bold text-[10px] uppercase transition hover:scale-105 shadow-lg shadow-red-900/40"
+                >
+                    Vota
+                </a>
+
             </div>
         </div>
     </nav>
@@ -195,6 +252,13 @@
                 }
             }
         });
+
+        function toggleQR() {
+            const qr = document.getElementById("qrBox");
+            qr.classList.toggle("opacity-0");
+            qr.classList.toggle("scale-95");
+            qr.classList.toggle("pointer-events-none");
+        }
     </script>
 </body>
 </html>
