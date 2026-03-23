@@ -18,7 +18,7 @@
     <nav class="p-4 border-b border-gray-800 bg-gray-900 sticky top-0 z-50 shadow-2xl">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <img src="resources/cineclub-logo.jpg" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-600 object-cover shadow-lg" onerror="this.src='https://via.placeholder.com/100?text=CineClub'">
+                <img src="resources/cineclub-logo.png" alt="Logo" class="h-12 w-12 rounded-full border-2 border-red-600 object-cover shadow-lg" onerror="this.src='https://via.placeholder.com/100?text=CineClub'">
                 <h1 class="text-2xl font-black text-red-600 tracking-tighter italic hidden sm:block uppercase">Cineclub <span class="text-white">Ravenna</span></h1>
             </div>
             <div class="flex items-center gap-6">
@@ -58,6 +58,42 @@
             <h2 class="text-gray-500 text-xs font-bold uppercase tracking-[0.3em] mb-6 text-center italic">Catalogo Completo</h2>
             <div id="movie-archive" class="flex flex-wrap justify-center gap-2 opacity-50"></div>
         </section>
+
+        <footer class="mt-20 border-t border-gray-900 pt-10 pb-20 px-6">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+                
+                <div class="flex flex-col items-center md:items-start">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center font-black text-xs">CR</div>
+                        <span class="text-lg font-black uppercase tracking-tighter italic">Cineclub <span class="text-red-600">Ravenna</span></span>
+                    </div>
+                    <p class="text-gray-500 text-[10px] uppercase tracking-widest font-bold">Fondato nel 2026</p>
+                </div>
+    
+                <div class="flex gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
+                    <a href="#classifica" class="hover:text-red-500 transition">Classifica</a>
+                    <a href="#archivio" class="hover:text-red-500 transition">Archivio</a>
+                    <a href="mailto:freeherds@gmail.com" class="hover:text-red-500 transition">Contatti</a>
+                </div>
+    
+                <div class="text-right">
+                    <p class="text-gray-600 text-[9px] uppercase font-bold leading-loose">
+                        © 2026 Cineclub Ravenna <br>
+                        Made with ❤️ in Romagna
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-10 flex justify-center items-center gap-2 text-sm opacity-60">
+              <span>Designed & developed by</span>
+              <a href="https://www.instagram.com/gianfree182/" 
+                 target="_blank"
+                 class="flex items-center gap-1 hover:text-pink-500 transition font-medium">
+                 <span>📸</span>
+                 @gianfree182
+              </a>
+            </div>
+        </footer>
     </main>
 
     <script>
@@ -116,7 +152,7 @@
                     const cleanRow = {};
                     Object.keys(row).forEach(k => cleanRow[k.trim()] = row[k]);
 
-                    const title = cleanRow["Titolo Film"]?.trim();
+                    const title = cleanRow["Titolo Film"]?.trim().toUpperCase();
                     if (!title) return;
 
                     if (!moviesData[title]) moviesData[title] = { title, reviews: [], total: 0 };
