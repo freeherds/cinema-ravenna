@@ -235,20 +235,29 @@
                 </div>
             </div>
 
-            <div class="mt-10 flex justify-center items-center gap-2 text-sm opacity-60">
-                <span>Designed & developed by</span>
+            <div class="mt-16 flex flex-col items-center gap-4 opacity-80 hover:opacity-100 transition-opacity duration-500">
+                <span class="text-[10px] uppercase tracking-[0.4em] text-gray-500 font-black">Digital Architect</span>
+                
                 <a href="https://www.instagram.com/gianfree182/" target="_blank"
-                    class="flex items-center gap-3 hover:text-pink-500 transition font-medium group">                
-                    <img 
-                        src="resources/gian_ghibli.png" 
-                        alt="Gianfranco" 
-                        class="w-16 h-16 rounded-full object-cover border-4 border-gray-800 group-hover:border-pink-500 transition-all duration-300 shadow-xl"
-                        onerror="this.src='https://via.placeholder.com/150?text=G'"
-                    >
+                    class="flex flex-col items-center gap-4 group">
                     
-                    <span class="text-[11px] font-bold uppercase tracking-widest text-gray-500 group-hover:text-pink-500 transition">
-                        @gianfree182
-                    </span>
+                    <div class="relative">
+                        <div class="absolute -inset-1 bg-gradient-to-tr from-pink-500 to-yellow-500 rounded-full blur opacity-0 group-hover:opacity-40 transition duration-500"></div>
+                        
+                        <img 
+                            src="resources/gian_ghibli.png" 
+                            alt="Gianfranco" 
+                            class="relative w-20 h-20 rounded-full object-cover border-4 border-gray-900 group-hover:border-pink-500 transition-all duration-300 shadow-2xl"
+                            onerror="this.src='https://via.placeholder.com/150?text=GF'"
+                        >
+                    </div>
+                    
+                    <div class="text-center">
+                        <span class="block text-lg font-black italic uppercase tracking-tighter group-hover:text-pink-500 transition">
+                            @gianfree182
+                        </span>
+                        <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Ravenna, IT</span>
+                    </div>
                 </a>
             </div>
         </footer>
