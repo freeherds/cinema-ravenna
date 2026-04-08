@@ -107,6 +107,15 @@
     </div>
 
     <main class="max-w-7xl mx-auto p-6">
+
+        <section id="coming-next" class="max-w-7xl mx-auto p-6 py-10 hidden">
+            <h2 class="text-3xl font-bold mb-10 flex items-center gap-3 italic uppercase text-green-500">
+                <span class="not-italic">📅</span> Prossimamente
+            </h2>
+            <div id="next-carousel" class="flex gap-6">
+                </div>
+        </section>
+
         <section id="classifica" class="py-10">
             <h2 class="text-3xl font-bold mb-10 flex items-center gap-3 italic uppercase"><span
                     class="not-italic">🏆</span> Classifica Film</h2>
@@ -254,6 +263,7 @@
         const tmdbApiKey = "724dec35d4114dc551e7fc3f7c349910";
         const googleSheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSDonz2CNaRYpxTJJTqjY5XW4GlxBB0vaenouNdpysCaGH5KOFw1wiXxQkPM4hd7U8g_JIFwDL0C_hc/pub?output=csv";
         const tmdbImgUrl = "https://image.tmdb.org/t/p/w500";
+        const nextMoviesCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSaYm6Dn7pKkpvOqk4t5Iqd24xTm-aPwxzTtXgc8qL4fub5VzEfdestc-146KglSGoTc7VXuaNaziUu/pub?output=csv";
         let moviesData = {};
 
         async function getTmdb(title) {
@@ -291,6 +301,67 @@
             document.getElementById('movie-modal').classList.add('hidden');
             document.body.classList.remove('modal-active');
         }
+
+        // A. Funzione Countdown
+        function startCountdown(dateStr, elementId) {
+            const target = new Date(dateStr).getTime();
+            const timer = setInterval(() => {
+                const now = new Date().getTime();
+                const diff = target - now;
+                const el = document.getElementById(elementId);
+                if (!el) return clearInterval(timer);
+                if (diff <= 0) { el.innerHTML = "ORA AL CINEMA! 🍿"; clearInterval(timer); } 
+                else {
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    el.innerHTML = `Mancano: ${d}g ${h}h ${m}m`;
+                }
+            }, 1000);
+        }
+
+        // B. Caricamento dal Form
+        Papa.parse(nextMoviesCSV, {
+            download: true, header: true, skipEmptyLines: true,
+            complete: async function(results) {
+                const carousel = document.getElementById('next-carousel');
+                const section = document.getElementById('coming-next');
+                const today = new Date().setHours(0,0,0,0);
+                let hasMovies = false;
+
+                for (let row of results.data) {
+                    const title = row["Che film andiamo a vedere?"]?.trim();
+                    const dateVal = row["In che data?"];
+                    const timeVal = row["A che ora?"];
+                    const cinema = row["In quale cinema?"];
+                    const active = row["Andiamo veramente?"]?.toUpperCase();
+
+                    if (title && dateVal && (active === "SÌ" || active === "SI") && new Date(dateVal) >= today) {
+                        hasMovies = true;
+                        section.classList.remove('hidden');
+                        const tmdb = await getTmdb(title);
+                        const timerId = `timer-${Math.random().toString(36).substr(2, 5)}`;
+                        
+                        carousel.innerHTML += `
+                            <div class="flex-none w-72 group relative">
+                                <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border border-green-900/30 group-hover:border-green-500 transition-all duration-500 shadow-2xl">
+                                    <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : ''}" class="w-full h-full object-cover">
+                                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
+                                    <div class="absolute top-4 left-4 flex flex-col gap-1">
+                                        <span class="bg-green-600 text-[10px] font-black uppercase px-2 py-1 rounded-md">${cinema}</span>
+                                        <span class="bg-black/50 backdrop-blur text-[10px] px-2 py-1 rounded-md text-white">${dateVal} • ${timeVal}</span>
+                                    </div>
+                                    <div class="absolute bottom-4 left-4 right-4">
+                                        <h3 class="text-lg font-black uppercase mb-2">${title}</h3>
+                                        <div id="${timerId}" class="text-[10px] font-mono text-green-400 font-bold bg-black/60 p-2 rounded-lg border border-green-500/20 text-center">Caricamento...</div>
+                                    </div>
+                                </div>
+                            </div>`;
+                        startCountdown(`${dateVal}T${timeVal}:00`, timerId);
+                    }
+                }
+            }
+        });
 
         Papa.parse(googleSheetCSV, {
             download: true,
