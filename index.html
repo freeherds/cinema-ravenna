@@ -322,43 +322,72 @@
 
         // B. Caricamento dal Form
         Papa.parse(nextMoviesCSV, {
-            download: true, header: true, skipEmptyLines: true,
+            download: true,
+            header: true,
+            skipEmptyLines: true,
             complete: async function(results) {
                 const carousel = document.getElementById('next-carousel');
                 const section = document.getElementById('coming-next');
-                const today = new Date().setHours(0,0,0,0);
-                let hasMovies = false;
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let hasVisibleMovies = false;
+                carousel.innerHTML = ''; // Pulisce il carosello prima di caricare
 
                 for (let row of results.data) {
-                    const title = row["Che film andiamo a vedere?"]?.trim();
-                    const dateVal = row["In che data?"];
-                    const timeVal = row["A che ora?"];
-                    const cinema = row["In quale cinema?"];
-                    const active = row["Andiamo veramente?"]?.toUpperCase();
+                    // Mapping esatto basato sulla tua immagine
+                    const title = row["Film da vedere"]?.trim();
+                    const cinema = row["Quale cinema"]?.trim();
+                    const dateVal = row["Data"]?.trim(); // Formato atteso: 08/04/2026
+                    const timeVal = row["Ora"]?.trim();
+                    const active = row["Andremo veramente"]?.trim();
 
-                    if (title && dateVal && (active === "SÌ" || active === "SI") && new Date(dateVal) >= today) {
-                        hasMovies = true;
-                        section.classList.remove('hidden');
+                    if (!title || !dateVal) continue;
+
+                    // Convertiamo la data italiana (GG/MM/AAAA) in formato leggibile da JS (AAAA-MM-GG)
+                    const parts = dateVal.split('/');
+                    const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
+                    const movieDate = new Date(formattedDate);
+                    
+                    // Controllo: Se è "Sì" e la data non è passata
+                    if ((active === "Sì" || active === "SI") && movieDate >= today) {
+                        hasVisibleMovies = true;
                         const tmdb = await getTmdb(title);
                         const timerId = `timer-${Math.random().toString(36).substr(2, 5)}`;
                         
                         carousel.innerHTML += `
                             <div class="flex-none w-72 group relative">
-                                <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border border-green-900/30 group-hover:border-green-500 transition-all duration-500 shadow-2xl">
-                                    <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : ''}" class="w-full h-full object-cover">
+                                <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border border-green-900/30 group-hover:border-green-500 transition-all duration-500 shadow-2xl bg-gray-900">
+                                    <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=' + title}" 
+                                        class="w-full h-full object-cover">
                                     <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
-                                    <div class="absolute top-4 left-4 flex flex-col gap-1">
-                                        <span class="bg-green-600 text-[10px] font-black uppercase px-2 py-1 rounded-md">${cinema}</span>
-                                        <span class="bg-black/50 backdrop-blur text-[10px] px-2 py-1 rounded-md text-white">${dateVal} • ${timeVal}</span>
+                                    
+                                    <div class="absolute top-4 left-4 flex flex-col gap-2">
+                                        <span class="bg-green-600 text-[10px] font-black uppercase px-3 py-1 rounded-full w-fit shadow-lg">${cinema}</span>
+                                        <span class="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 italic">
+                                            ${dateVal} • ${timeVal}
+                                        </span>
                                     </div>
-                                    <div class="absolute bottom-4 left-4 right-4">
-                                        <h3 class="text-lg font-black uppercase mb-2">${title}</h3>
-                                        <div id="${timerId}" class="text-[10px] font-mono text-green-400 font-bold bg-black/60 p-2 rounded-lg border border-green-500/20 text-center">Caricamento...</div>
+
+                                    <div class="absolute bottom-6 left-6 right-6 text-center">
+                                        <h3 class="text-xl font-black uppercase tracking-tighter mb-3">${title}</h3>
+                                        <div id="${timerId}" class="text-[11px] font-mono text-green-400 font-black bg-black/60 backdrop-blur-xl p-3 rounded-2xl border border-green-500/30">
+                                            Calcolo...
+                                        </div>
                                     </div>
                                 </div>
-                            </div>`;
-                        startCountdown(`${dateVal}T${timeVal}:00`, timerId);
+                            </div>
+                        `;
+                        
+                        // Avvio countdown: attenzione al formato ora (21.10.00 -> 21:10:00)
+                        const validTime = timeVal.replace(/\./g, ':');
+                        startCountdown(`${formattedDate}T${validTime}`, timerId);
                     }
+                }
+                
+                // Se abbiamo trovato film, mostriamo la sezione
+                if (hasVisibleMovies) {
+                    section.classList.remove('hidden');
                 }
             }
         });
