@@ -24,6 +24,30 @@
         .modal-active {
             overflow: hidden;
         }
+
+        /* Impedisce allo scorrimento del carosello di rompere il sito */
+        #coming-next {
+            width: 100%;
+            max-width: 100vw;
+        }
+
+        #next-carousel {
+            display: flex;
+            overflow-x: auto;
+            /* Snap per rendere lo scorrimento fluido come un'app */
+            scroll-snap-type: x mandatory; 
+            -webkit-overflow-scrolling: touch;
+            padding-right: 1.5rem; /* Spazio per non far tagliare l'ultima card */
+        }
+
+        #next-carousel::-webkit-scrollbar {
+            display: none; /* Nasconde la barra di scorrimento su mobile */
+        }
+
+        #next-carousel > div {
+            scroll-snap-align: start;
+            flex-shrink: 0; /* Impedisce alle card di restringersi */
+        }
     </style>
 </head>
 
@@ -108,11 +132,11 @@
 
     <main class="max-w-7xl mx-auto p-6">
 
-        <section id="coming-next" class="max-w-7xl mx-auto p-6 py-10 hidden">
+        <section id="coming-next" class="max-w-7xl mx-auto p-6 py-10 hidden overflow-x-hidden">
             <h2 class="text-3xl font-bold mb-10 flex items-center gap-3 italic uppercase text-green-500">
                 <span class="not-italic">📅</span> Prossimamente
             </h2>
-            <div id="next-carousel" class="flex gap-6">
+            <div id="next-carousel" class="flex gap-6 overflow-x-auto pb-6 custom-scrollbar scroll-smooth">
                 </div>
         </section>
 
