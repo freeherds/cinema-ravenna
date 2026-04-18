@@ -358,7 +358,6 @@
                 let futureMovies = [];
                 let pastMovies = [];
 
-                // 1. Organizziamo i film tra passati e futuri
                 for (let row of results.data) {
                     const title = row["Film da vedere"]?.trim();
                     const cinema = row["Quale cinema"]?.trim();
@@ -376,15 +375,19 @@
 
                     if (movieDate < today) {
                         pastMovies.push(movieObj);
-                    } else if (active?.toUpperCase() === "SÌ") {
+                    } else if (active?.toUpperCase() === "SÌ" || active?.toUpperCase() === "SI") {
                         futureMovies.push(movieObj);
                     }
                 }
 
-                // 2. Generiamo l'HTML del carosello
+                // MOSTRA LA SEZIONE se c'è almeno qualcosa
+                if (pastMovies.length > 0 || futureMovies.length > 0) {
+                    section.classList.remove('hidden');
+                }
+
                 carousel.innerHTML = '';
 
-                // 3. PRIMA LA FRECCIA (A SINISTRA)
+                // 3. FRECCIA BEFORE
                 carousel.innerHTML += `
                     <div class="flex flex-col items-center justify-center min-w-[280px] px-10 pointer-events-none select-none">
                         <span class="text-white text-5xl font-black uppercase italic tracking-tighter mb-2">BEFORE</span>
@@ -392,13 +395,13 @@
                         <div class="h-2 w-24 bg-red-600 mt-4 rounded-full shadow-[0_0_30px_#dc2626]"></div>
                     </div>`;
 
-                // 4. POI IL FILM PASSATO (A DESTRA DELLA FRECCIA)
+                // 4. FILM PASSATO (A DESTRA DELLA FRECCIA)
                 if (pastMovies.length > 0) {
                     const lastPast = pastMovies[pastMovies.length - 1]; 
                     carousel.innerHTML += await renderComingSoonCard(lastPast, true);
                 }
 
-                // 5. INFINE I FILM FUTURI
+                // 5. FILM FUTURI
                 for (let movie of futureMovies) {
                     carousel.innerHTML += await renderComingSoonCard(movie, false);
                 }
@@ -411,7 +414,6 @@
             const timerId = `timer-${Math.random().toString(36).substr(2, 5)}`;
             const cardId = `next-${m.title.toLowerCase().replace(/ /g, '-')}`;
             
-            // Avvia countdown solo se non è passato
             if (!isPast) {
                 const validTime = m.timeVal.replace(/\./g, ':');
                 setTimeout(() => startCountdown(`${m.formattedDate}T${validTime}`, timerId), 100);
@@ -425,10 +427,11 @@
                         
                         <div class="absolute top-4 left-4 flex flex-col gap-2">
                             <span class="${isPast ? 'bg-gray-700' : 'bg-red-600'} text-[10px] font-black uppercase px-3 py-1 rounded-full w-fit shadow-lg">${m.cinema}</span>
+                            <span class="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 italic">${m.dateVal}</span>
                         </div>
 
                         <div class="absolute bottom-6 left-6 right-6 text-center">
-                            <h3 class="text-xl font-black uppercase tracking-tighter mb-3">${m.title}</h3>
+                            <h3 class="text-xl font-black uppercase tracking-tighter mb-3 line-clamp-2">${m.title}</h3>
                             ${!isPast ? `
                                 <div id="${timerId}" class="text-[11px] font-mono text-red-400 font-black bg-black/60 backdrop-blur-xl p-3 rounded-2xl border border-red-500/30 mb-3">
                                     Calcolo...
@@ -438,7 +441,7 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                                     COPIA LINK
                                 </button>
-                            ` : '<div class="text-xs font-black text-gray-400 uppercase italic">VISTO IL ' + m.dateVal + '</div>'}
+                            ` : '<div class="text-xs font-black text-gray-400 uppercase italic">VISTO</div>'}
                         </div>
                     </div>
                 </div>`;
