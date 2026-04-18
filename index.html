@@ -422,7 +422,9 @@
             }
 
             return `
-                <div id="${cardId}" class="flex-none w-72 group relative ${isPast ? 'opacity-50 grayscale' : ''}">
+                <div id="${cardId}" 
+                    onclick="openModalFromTmdb('${m.title.replace(/'/g, "\\'")}')" 
+                    class="flex-none w-72 group relative cursor-pointer ${isPast ? 'opacity-50 grayscale' : ''}">
                     <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border ${isPast ? 'border-gray-800' : 'border-red-900/30 group-hover:border-red-500'} transition-all duration-500 shadow-2xl bg-gray-900">
                         <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=' + m.title}" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
@@ -447,6 +449,29 @@
                         </div>
                     </div>
                 </div>`;
+        }
+
+        async function openModalFromTmdb(title) {
+            // 1. Cerchiamo i dati su TMDB
+            const movie = await getTmdb(title);
+            if (!movie) return;
+
+            // 2. Riempiamo i campi del modal
+            document.getElementById('modal-title').innerText = movie.title || title;
+            document.getElementById('modal-desc').innerText = movie.overview || "Trama non disponibile.";
+            document.getElementById('modal-poster').style.backgroundImage = `url(${tmdbImgUrl + movie.poster_path})`;
+            
+            // 3. Nascondiamo la media voti e le recensioni (perché non ci sono ancora!)
+            document.getElementById('modal-rating').innerText = "PROSSIMAMENTE AL CINEMA";
+            document.getElementById('modal-reviews').innerHTML = `
+                <div class="text-center p-8 border-2 border-dashed border-gray-800 rounded-2xl">
+                    <p class="text-gray-500 italic text-sm">Non ci sono ancora recensioni per questo film. <br> Andremo a vederlo insieme!</p>
+                </div>
+            `;
+
+            // 4. Mostriamo il modal
+            document.getElementById('movie-modal').classList.remove('hidden');
+            document.body.classList.add('modal-active');
         }
 
         Papa.parse(googleSheetCSV, {
