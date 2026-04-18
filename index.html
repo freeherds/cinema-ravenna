@@ -154,21 +154,6 @@
             <div id="movie-archive" class="flex flex-wrap justify-center gap-2 opacity-50"></div>
         </section>
 
-        <section id="newsletter-cine" class="py-20 px-6 max-w-4xl mx-auto border-t border-white/5">
-            <div class="bg-gray-900/50 p-8 rounded-[2rem] border border-white/5 backdrop-blur-sm">
-                <h4 class="text-xl font-black italic uppercase mb-2 text-white">Vuoi sapere quando uscirà la prossima recensione?</h4>
-                <p class="text-gray-500 text-[10px] uppercase tracking-widest mb-6">Lascia la mail per non perdere i prossimi verdetti</p>
-                
-                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3">
-                    <input type="email" id="news-email" placeholder="latuamail@mail.com" required 
-                        class="flex-1 bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-xs focus:border-red-600 outline-none transition text-white">
-                    <button type="submit" class="bg-red-600 text-white font-black uppercase text-[10px] py-3 px-8 rounded-xl hover:bg-white hover:text-red-600 transition duration-300 shadow-lg shadow-red-900/20">
-                        Avvisami ⚡
-                    </button>
-                </form>
-            </div>
-        </section>
-
         <section id="chi-siamo"
             class="py-20 border-t border-gray-900 bg-gradient-to-b from-gray-950 to-gray-900 -mx-6 px-6">
             <div class="max-w-4xl mx-auto">
@@ -370,66 +355,98 @@
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
-                let hasVisibleMovies = false;
-                carousel.innerHTML = ''; // Pulisce il carosello prima di caricare
+                let futureMovies = [];
+                let pastMovies = [];
 
+                // 1. Organizziamo i film tra passati e futuri
                 for (let row of results.data) {
-                    // Mapping esatto basato sulla tua immagine
                     const title = row["Film da vedere"]?.trim();
                     const cinema = row["Quale cinema"]?.trim();
-                    const dateVal = row["Data"]?.trim(); // Formato atteso: 08/04/2026
+                    const dateVal = row["Data"]?.trim();
                     const timeVal = row["Ora"]?.trim();
                     const active = row["Andremo veramente"]?.trim();
 
                     if (!title || !dateVal) continue;
 
-                    // Convertiamo la data italiana (GG/MM/AAAA) in formato leggibile da JS (AAAA-MM-GG)
                     const parts = dateVal.split('/');
                     const formattedDate = `${parts[2]}-${parts[1]}-${parts[0]}`;
                     const movieDate = new Date(formattedDate);
-                    
-                    // Controllo: Se è "Sì" e la data non è passata
-                    if ((active === "Sì" || active === "SI") && movieDate >= today) {
-                        hasVisibleMovies = true;
-                        const tmdb = await getTmdb(title);
-                        const timerId = `timer-${Math.random().toString(36).substr(2, 5)}`;
-                        
-                        carousel.innerHTML += `
-                            <div class="flex-none w-72 group relative">
-                                <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border border-green-900/30 group-hover:border-green-500 transition-all duration-500 shadow-2xl bg-gray-900">
-                                    <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=' + title}" 
-                                        class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
-                                    
-                                    <div class="absolute top-4 left-4 flex flex-col gap-2">
-                                        <span class="bg-green-600 text-[10px] font-black uppercase px-3 py-1 rounded-full w-fit shadow-lg">${cinema}</span>
-                                        <span class="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 italic">
-                                            ${dateVal} • ${timeVal}
-                                        </span>
-                                    </div>
 
-                                    <div class="absolute bottom-6 left-6 right-6 text-center">
-                                        <h3 class="text-xl font-black uppercase tracking-tighter mb-3">${title}</h3>
-                                        <div id="${timerId}" class="text-[11px] font-mono text-green-400 font-black bg-black/60 backdrop-blur-xl p-3 rounded-2xl border border-green-500/30">
-                                            Calcolo...
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Avvio countdown: attenzione al formato ora (21.10.00 -> 21:10:00)
-                        const validTime = timeVal.replace(/\./g, ':');
-                        startCountdown(`${formattedDate}T${validTime}`, timerId);
+                    const movieObj = { title, cinema, dateVal, timeVal, formattedDate, movieDate };
+
+                    if (movieDate < today) {
+                        pastMovies.push(movieObj);
+                    } else if (active?.toUpperCase() === "SÌ") {
+                        futureMovies.push(movieObj);
                     }
                 }
-                
-                // Se abbiamo trovato film, mostriamo la sezione
-                if (hasVisibleMovies) {
+
+                // 2. Generiamo l'HTML del carosello
+                carousel.innerHTML = '';
+
+                // Mostriamo l'ultimo film passato (se esiste)
+                if (pastMovies.length > 0) {
+                    const lastPast = pastMovies[pastMovies.length - 1];
+                    carousel.innerHTML += await renderComingSoonCard(lastPast, true);
+                    
+                    // IL DIVISORE BEFORE (Stile Coworking)
+                    carousel.innerHTML += `
+                        <div class="flex flex-col items-center justify-center min-w-[280px] px-10 pointer-events-none select-none">
+                            <span class="text-white text-5xl font-black uppercase italic tracking-tighter mb-2">BEFORE</span>
+                            <div class="text-white text-6xl opacity-30">→</div>
+                            <div class="h-2 w-24 bg-red-600 mt-4 rounded-full shadow-[0_0_30px_#dc2626]"></div>
+                        </div>`;
+                }
+
+                // Mostriamo i film futuri
+                for (let movie of futureMovies) {
+                    carousel.innerHTML += await renderComingSoonCard(movie, false);
+                }
+
+                if (futureMovies.length > 0 || pastMovies.length > 0) {
                     section.classList.remove('hidden');
                 }
             }
         });
+
+        // Funzione helper per renderizzare la card nel carosello
+        async function renderComingSoonCard(m, isPast) {
+            const tmdb = await getTmdb(m.title);
+            const timerId = `timer-${Math.random().toString(36).substr(2, 5)}`;
+            const cardId = `next-${m.title.toLowerCase().replace(/ /g, '-')}`;
+            
+            // Avvia countdown solo se non è passato
+            if (!isPast) {
+                const validTime = m.timeVal.replace(/\./g, ':');
+                setTimeout(() => startCountdown(`${m.formattedDate}T${validTime}`, timerId), 100);
+            }
+
+            return `
+                <div id="${cardId}" class="flex-none w-72 group relative ${isPast ? 'opacity-50 grayscale' : ''}">
+                    <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border ${isPast ? 'border-gray-800' : 'border-red-900/30 group-hover:border-red-500'} transition-all duration-500 shadow-2xl bg-gray-900">
+                        <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=' + m.title}" class="w-full h-full object-cover">
+                        <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
+                        
+                        <div class="absolute top-4 left-4 flex flex-col gap-2">
+                            <span class="${isPast ? 'bg-gray-700' : 'bg-red-600'} text-[10px] font-black uppercase px-3 py-1 rounded-full w-fit shadow-lg">${m.cinema}</span>
+                        </div>
+
+                        <div class="absolute bottom-6 left-6 right-6 text-center">
+                            <h3 class="text-xl font-black uppercase tracking-tighter mb-3">${m.title}</h3>
+                            ${!isPast ? `
+                                <div id="${timerId}" class="text-[11px] font-mono text-red-400 font-black bg-black/60 backdrop-blur-xl p-3 rounded-2xl border border-red-500/30 mb-3">
+                                    Calcolo...
+                                </div>
+                                <button onclick="navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#${cardId}'); alert('Link film copiato! 🎬');" 
+                                        class="flex items-center justify-center gap-1 text-[9px] font-black uppercase text-gray-400 hover:text-white transition-colors mx-auto">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                                    COPIA LINK
+                                </button>
+                            ` : '<div class="text-xs font-black text-gray-400 uppercase italic">VISTO IL ' + m.dateVal + '</div>'}
+                        </div>
+                    </div>
+                </div>`;
+        }
 
         Papa.parse(googleSheetCSV, {
             download: true,
