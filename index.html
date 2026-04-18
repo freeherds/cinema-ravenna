@@ -416,15 +416,19 @@
             const timerId = `timer-${Math.random().toString(36).substr(2, 5)}`;
             const cardId = `next-${m.title.toLowerCase().replace(/ /g, '-')}`;
             
+            // Definiamo l'azione del click: solo se NON è passato
+            const clickAction = !isPast 
+                ? `onclick="openModalFromTmdb('${m.title.replace(/'/g, "\\'")}')"` 
+                : "";
+            const cursorClass = !isPast ? "cursor-pointer" : "cursor-default";
+
             if (!isPast) {
                 const validTime = m.timeVal.replace(/\./g, ':');
                 setTimeout(() => startCountdown(`${m.formattedDate}T${validTime}`, timerId), 100);
             }
 
             return `
-                <div id="${cardId}" 
-                    onclick="openModalFromTmdb('${m.title.replace(/'/g, "\\'")}')" 
-                    class="flex-none w-72 group relative cursor-pointer ${isPast ? 'opacity-50 grayscale' : ''}">
+                <div id="${cardId}" ${clickAction} class="flex-none w-72 group relative ${cursorClass} ${isPast ? 'opacity-50 grayscale' : ''}">
                     <div class="relative aspect-[2/3] rounded-3xl overflow-hidden border ${isPast ? 'border-gray-800' : 'border-red-900/30 group-hover:border-red-500'} transition-all duration-500 shadow-2xl bg-gray-900">
                         <img src="${tmdb ? tmdbImgUrl + tmdb.poster_path : 'https://via.placeholder.com/500x750?text=' + m.title}" class="w-full h-full object-cover">
                         <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-transparent to-transparent"></div>
@@ -440,7 +444,7 @@
                                 <div id="${timerId}" class="text-[11px] font-mono text-red-400 font-black bg-black/60 backdrop-blur-xl p-3 rounded-2xl border border-red-500/30 mb-3">
                                     Calcolo...
                                 </div>
-                                <button onclick="navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#${cardId}'); alert('Link film copiato! 🎬');" 
+                                <button onclick="event.stopPropagation(); navigator.clipboard.writeText(window.location.origin + window.location.pathname + '#${cardId}'); alert('Link film copiato! 🎬');" 
                                         class="flex items-center justify-center gap-1 text-[9px] font-black uppercase text-gray-400 hover:text-white transition-colors mx-auto">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                                     COPIA LINK
