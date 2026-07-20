@@ -344,6 +344,7 @@
         }
 
         // B. Caricamento dal Form
+        // B. Caricamento dal Form e Ordinamento Cronologico
         Papa.parse(nextMoviesCSV, {
             download: true,
             header: true,
@@ -379,6 +380,12 @@
                     }
                 }
 
+                // ORDINAMENTO: Ordina i film futuri dal più vicino (più vecchio cronologicamente) al più lontano
+                futureMovies.sort((a, b) => a.movieDate - b.movieDate);
+
+                // ORDINAMENTO: Ordina i film passati dal più recente al meno recente
+                pastMovies.sort((a, b) => b.movieDate - a.movieDate);
+
                 // MOSTRA LA SEZIONE se c'è almeno qualcosa
                 if (pastMovies.length > 0 || futureMovies.length > 0) {
                     section.classList.remove('hidden');
@@ -387,7 +394,7 @@
                 // 2. Generiamo l'HTML del carosello
                 carousel.innerHTML = '';
 
-                // 3. PRIMA I FILM FUTURI (A SINISTRA)
+                // 3. PRIMA I FILM FUTURI (A SINISTRA) - Ordinati per data
                 for (let movie of futureMovies) {
                     carousel.innerHTML += await renderComingSoonCard(movie, false);
                 }
@@ -400,10 +407,9 @@
                         <div class="h-2 w-24 bg-red-600 mt-4 rounded-full shadow-[0_0_30px_#dc2626]"></div>
                     </div>`;
 
-                // 5. INFINE IL FILM PASSATO (A DESTRA DEL BEFORE)
+                // 5. INFINE IL FILM PASSATO (A DESTRA DEL BEFORE) - Il più recente in assoluto
                 if (pastMovies.length > 0) {
-                    // Ordiniamo i passati in modo che l'ultimo visto sia il primo dopo il BEFORE
-                    const lastPast = pastMovies[pastMovies.length - 1]; 
+                    const lastPast = pastMovies[0]; 
                     carousel.innerHTML += await renderComingSoonCard(lastPast, true);
                 }
             }
