@@ -229,57 +229,38 @@
             </div>
         </section>
 
-        <footer class="mt-20 border-t border-gray-900 pt-10 pb-20 px-6">
-            <div class="mt-16 flex flex-col items-center gap-4 opacity-80 hover:opacity-100 transition-opacity duration-500">
-                <span class="text-[10px] uppercase tracking-[0.4em] text-gray-500 font-black">Digital Architect</span>
-                
-                <a href="https://www.instagram.com/gianfree182/" target="_blank"
-                    class="flex flex-col items-center gap-4 group">
-                    
-                    <div class="relative">
-                        <div class="absolute -inset-1 bg-gradient-to-tr from-pink-500 to-yellow-500 rounded-full blur opacity-0 group-hover:opacity-40 transition duration-500"></div>
-                        
-                        <img 
-                            src="resources/gian_ghibli.png" 
-                            alt="Gianfranco" 
-                            class="relative w-20 h-20 rounded-full object-cover border-4 border-gray-900 group-hover:border-pink-500 transition-all duration-300 shadow-2xl"
-                            onerror="this.src='https://via.placeholder.com/150?text=GF'"
-                        >
+        <footer class="mt-20 border-t border-white/5 pt-24 pb-12 px-6 bg-zinc-950">
+            <div class="max-w-7xl mx-auto flex flex-col items-center">
+                <div class="flex flex-col items-center mb-16 text-center">
+                    <span class="text-[10px] uppercase tracking-[0.6em] text-amber-500 font-black mb-6 italic">Founders & Vision</span>
+                    <div class="flex flex-col sm:flex-row gap-4 sm:gap-12 text-lg font-black uppercase tracking-widest italic">
+                        <span>Arianna Magnani</span>
+                        <span class="hidden sm:block text-white/10">/</span>
+                        <span>Francis Mason</span>
                     </div>
-                    
-                    <div class="text-center">
-                        <span class="block text-lg font-black italic uppercase tracking-tighter group-hover:text-pink-500 transition">
-                            @gianfree182
-                        </span>
-                        <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest">Ravenna, IT</span>
-                    </div>
+                </div>
+        
+                <span class="text-[10px] uppercase tracking-[0.5em] text-gray-600 font-black mb-8">Digital Architect</span>
+                <a href="https://www.instagram.com/gianfree182/" target="_blank" class="flex flex-col items-center group">
+                    <img src="resources/gian_ghibli.png" class="w-24 h-24 rounded-full border-2 border-white/10 group-hover:border-amber-500 transition duration-500 mb-6 object-cover" alt="Gianfranco">
+                    <span class="text-xl font-black italic uppercase tracking-tighter group-hover:text-amber-500 transition">@gianfree182</span>
                 </a>
-            </div>
-            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-
-                <div class="flex flex-col items-center md:items-start">
-                    <div class="flex items-center gap-3 mb-2">
-                        <div
-                            class="w-8 h-8 bg-red-600 rounded-full flex items-center justify-center font-black text-xs">
-                            CR</div>
-                        <span class="text-lg font-black uppercase tracking-tighter italic">Cineclub <span
-                                class="text-red-600">Ravenna</span></span>
-                    </div>
-                    <p class="text-gray-500 text-[10px] uppercase tracking-widest font-bold">Fondato nel 2026 da Eugenio</p>
+                
+                <!-- Link di navigazione footer -->
+                <div class="mt-20 text-gray-700 text-[9px] uppercase font-bold tracking-[0.3em] flex flex-wrap gap-8 border-t border-white/5 pt-8 w-full justify-center">
+                    <span>© 2026 Coworking Ravenna</span>
+                    <a href="mailto:freeherds@gmail.com" class="hover:text-gray-400 transition">Contatti</a>
+                    <a href="https://www.instagram.com/popupcoworking.ra/" target="_blank" class="hover:text-gray-400 transition">Instagram</a>
+                    <a href="https://freeherds.github.io/products-freeherds/" target="_blank" class="hover:text-amber-500 transition">Freeherds</a>
                 </div>
-
-                <div class="flex gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">
-                    <a href="#classifica" class="hover:text-red-500 transition">Classifica</a>
-                    <a href="mailto:freeherds@gmail.com" class="hover:text-red-500 transition">Contatti</a>
-                    <a href="#chi-siamo" class="hover:text-red-500 transition">Chi siamo</a>
-                    <a href="https://freeherds.github.io/products-freeherds/" target="_blank class="hover:text-red-500 transition">Prodotti Freeherds</a>
-                </div>
-
-                <div class="text-right">
-                    <p class="text-gray-600 text-[9px] uppercase font-bold leading-loose">
-                        © 2026 Cineclub Ravenna <br>
-                        Made with ❤️ in Romagna
-                    </p>
+        
+                <!-- Credits Freeherds con Logo -->
+                <div class="mt-6 text-xs text-gray-500 flex items-center justify-center gap-2">
+                    <span>Crafted with passion &amp; digital cappelletti by</span>
+                    <a href="https://freeherds.github.io/products-freeherds/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 font-medium text-gray-400 hover:text-amber-500 transition-colors group">
+                        <img src="resources/photos/logo-freeherds.png" alt="Freeherds Logo" class="h-4 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity">
+                        <span class="underline">Freeherds</span>
+                    </a>
                 </div>
             </div>
         </footer>
